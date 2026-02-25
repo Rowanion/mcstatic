@@ -4,3 +4,4 @@ Type=Application
 Exec=mc
 Icon=mc
 Terminal=true
+Categories=Utility;FileManager;System;
