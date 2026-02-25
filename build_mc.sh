@@ -28,6 +28,35 @@ make install DESTDIR=/build/AppDir
 echo "Packaging AppImage..."
 cd /build
 
+# --- SKIN FIX START ---
+# Ensure the skins and help files are bundled from the build output
+mkdir -p AppDir/usr/share/mc
+cp -r /build/mc-${MC_VERSION}/misc/skins AppDir/usr/share/mc/
+
+# Create a custom AppRun to tell MC where its data is located inside the AppImage
+cat > /my_custom_apprun.sh <<'EOF'
+#!/bin/bash
+# Find the directory where the AppRun is located
+HERE="$(dirname "$(readlink -f "${0}")")"
+
+# Set the MC Data directory to internal paths
+export MC_DATADIR="$HERE/usr/share/mc"
+
+# Explicitly point to the skins folder 
+export MC_SKINSDIR="$HERE/usr/share/mc/skins"  
+
+# Point to the library files (where the default menus/etc live) 
+export MC_LIBDIR="$HERE/usr/share/mc"
+
+# Ensure common colors are supported
+export COLORTERM=truecolor
+
+# Run the bundled MC
+exec "$HERE/usr/bin/mc" -u "$@"
+EOF
+chmod +x /my_custom_apprun.sh
+# --- SKIN FIX END ---
+
 # Create a dummy desktop file so linuxdeploy doesn't complain
 cat > mc.desktop <<EOF
 [Desktop Entry]
@@ -39,12 +68,8 @@ Categories=System;
 Terminal=true
 EOF
 
-# we need to circumvent linuxdeploy's fallback to a terminal icon
-# 1. Create the directory where linuxdeploy expects to find system icons 
+# Icon Fix
 mkdir -p AppDir/usr/share/icons/hicolor/32x32/apps/
-
-# 2. Copy your mc.png to that location, but RENAME it to utilities-terminal.png
-# (Assuming mc.png is in your current directory)
 cp /mc.png AppDir/usr/share/icons/hicolor/32x32/apps/utilities-terminal.png
 
 # Use linuxdeploy to bundle dependencies
@@ -53,6 +78,7 @@ linuxdeploy --appdir AppDir \
             -i /mc.png \
             -d mc.desktop \
             -e AppDir/usr/bin/mc \
+            --custom-apprun /my_custom_apprun.sh \
             --output appimage
 
 echo "Done! Your AppImage is in the build folder."
