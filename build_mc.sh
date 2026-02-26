@@ -15,6 +15,7 @@ cd mc-${MC_VERSION}
 echo "Configuring MC..."
 ./configure --prefix=/usr \
             --sysconfdir=/etc \
+            --libexecdir=/usr/libexec \
             --with-screen=ncurses \
             --enable-vfs-sftp \
             --enable-vfs-smb \
@@ -47,6 +48,9 @@ export MC_SKINSDIR="$HERE/usr/share/mc/skins"
 
 # Point to the library files (where the default menus/etc live) 
 export MC_LIBDIR="$HERE/usr/share/mc"
+
+# This forces MC to look inside the AppImage for the 'syntax' folder
+export XDG_DATA_HOME="$HERE/usr/share"
 
 # Ensure common colors are supported
 export COLORTERM=truecolor
